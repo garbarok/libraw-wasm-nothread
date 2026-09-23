@@ -1,7 +1,7 @@
 {
-	"name": "libraw-wasm",
-	"version": "1.6.0",
-	"description": "LibRaw WASM bindings to be able to use it in the browser.",
+	"name": "libraw-wasm-nothread",
+	"version": "1.6.0-nothread.1",
+	"description": "LibRaw WASM bindings for the browser — a single-threaded (no -pthread) fork of libraw-wasm, built to avoid the SharedArrayBuffer/recursive-worker pattern that breaks bundlers like Turbopack.",
 	"main": "dist/index.js",
 	"type": "module",
 	"types": "dist/index.d.ts",
@@ -23,17 +23,18 @@
 		"BeseBarni",
 		"lexluthor0304",
 		"gwennlbh",
-		"hrueger"
+		"hrueger",
+		"garbarok (no-pthread fork)"
 	],
 	"license": "ISC",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/ybouane/LibRaw-Wasm.git"
+		"url": "git+https://github.com/garbarok/libraw-wasm-nothread.git"
 	},
 	"bugs": {
-		"url": "https://github.com/ybouane/LibRaw-Wasm/issues"
+		"url": "https://github.com/garbarok/libraw-wasm-nothread/issues"
 	},
-	"homepage": "https://github.com/ybouane/LibRaw-Wasm#readme",
+	"homepage": "https://github.com/garbarok/libraw-wasm-nothread#readme",
 	"devDependencies": {
 		"esbuild": "^0.28.1",
 		"playwright": "^1.56.0"

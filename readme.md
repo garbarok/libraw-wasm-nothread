@@ -1,5 +1,45 @@
-<sub>*Follow me on X [@ybouane](https://x.com/ybouane) — I'm building in public.*</sub>
-# LibRaw-Wasm
+# libraw-wasm-nothread
+
+A single-threaded fork of [ybouane/LibRaw-Wasm](https://github.com/ybouane/LibRaw-Wasm),
+built **without** Emscripten's `-pthread`/`USE_PTHREADS` flags.
+
+## Why this fork exists
+
+Upstream `libraw-wasm` compiles its WASM module with pthread support, which
+Emscripten implements as a `SharedArrayBuffer`-backed `WebAssembly.Memory`
+plus a worker-pool manager that recursively spawns more `Worker` instances
+of the same module from *inside* an already-spawned worker
+(`allocateUnusedWorker` → `new Worker(new URL("libraw.js", ...))`, called
+from within `worker.js`, which was itself spawned by `index.js`).
+
+Bundlers that statically resolve `new Worker(new URL(...))` expressions —
+Turbopack (Next.js's default bundler since v16) among them — can get stuck
+trying to resolve this self-referential worker graph. It doesn't error, it
+just hangs indefinitely at build time. See
+[this writeup](https://github.com/garbarok/snap-compress/blob/main/docs/development/TURBOPACK_LIBRAW_WASM_HANG.md)
+for the full root-cause investigation (a documented `turbopackIgnore` magic
+comment was tried first and did **not** fix it — the hang isn't just about
+the outer `new Worker()` call site).
+
+LibRaw's core demosaic path does not require threads to function — pthreads
+here are a speed optimization, not a correctness requirement (confirmed
+against upstream issue [#29](https://github.com/ybouane/LibRaw-Wasm/issues/29),
+which notes OpenMP-based demosaic threading was already a no-op in the
+upstream build). Dropping `-pthread` removes the recursive worker-pool
+codegen entirely, leaving exactly one plain, non-recursive `Worker` spawn
+(the original `index.js` → `worker.js` call) — the same shape already used
+safely by other WASM packages like `@jsquash/webp`/`@jsquash/png`.
+
+**This fork changes only build flags** (`compileLibraw.sh`), not
+`libraw_wrapper.cpp` or any of the JS wrapper logic — same LibRaw 0.22.1
+source, same API, same decode behavior. Decode quality/coverage should be
+identical to upstream; only the bundler-facing worker architecture changes.
+
+Full credit to [@ybouane](https://github.com/ybouane) and contributors for
+the original wrapper and build pipeline this fork is based on.
+
+---
+
 A WebAssembly build of LibRaw, powered by Emscripten and leveraging Web Workers. This lets you decode and process RAW image files directly in the browser or in a Node.js environment supporting WebAssembly. With LibRaw-Wasm, you can extract metadata and obtain decoded image data from formats such as CR2, NEF, ARW, DNG, and more.
 
 This package provides an asynchronous API for opening RAW images and processing them using the same robust codebase behind LibRaw.
@@ -9,7 +49,7 @@ LibRaw-Wasm's processing is done in a Web Worker to avoid blocking the main UI t
 
 # Install
 ```bash
-npm install libraw-wasm
+npm install libraw-wasm-nothread
 ```
 
 # Basic usage

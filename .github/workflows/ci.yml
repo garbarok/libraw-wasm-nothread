@@ -26,7 +26,7 @@ jobs:
       - name: Set up Emscripten
         uses: mymindstorm/setup-emsdk@v14
         with:
-          version: 5.0.7
+          version: 6.0.10
           actions-cache-folder: emsdk-cache
 
       - name: Force static-lib rebuild if the build script changed
