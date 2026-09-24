@@ -66,8 +66,8 @@ jobs:
           # Idempotent: a tag push and a manual re-run can both fire for the same
           # version; skip (don't fail) if it's already on npm so the release still
           # completes and the GitHub Release step below still runs.
-          if npm view "libraw-wasm@${VERSION}" version >/dev/null 2>&1; then
-            echo "libraw-wasm@${VERSION} is already published — skipping npm publish."
+          if npm view "libraw-wasm-nothread@${VERSION}" version >/dev/null 2>&1; then
+            echo "libraw-wasm-nothread@${VERSION} is already published — skipping npm publish."
           else
             npm publish --provenance --access public
           fi

@@ -54,7 +54,7 @@ npm install libraw-wasm-nothread
 
 # Basic usage
 ```javascript
-import LibRaw from 'libraw-wasm';
+import LibRaw from 'libraw-wasm-nothread';
 
 const output = document.getElementById('output');
 // Instantiate LibRaw
@@ -82,6 +82,20 @@ try {
 const rawImageData = await raw.rawImageData();
 console.log('Raw sensor data:', rawImageData); // { raw_width, raw_height, width, height, top_margin, left_margin, data: Uint16Array }
 
+// IMPORTANT: dispose() when you're done with this instance. Each LibRaw
+// instance owns a dedicated Worker (and its WASM heap); without dispose(),
+// that Worker keeps running for the life of the page. Call it in a
+// try/finally so it still runs if open()/imageData() throw:
+//
+//   const raw = new LibRaw();
+//   try {
+//     await raw.open(buffer, settings);
+//     const imageData = await raw.imageData();
+//     // ... use imageData ...
+//   } finally {
+//     raw.dispose();
+//   }
+raw.dispose();
 ```
 
 # Settings
