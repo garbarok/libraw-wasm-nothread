@@ -117,7 +117,15 @@ echo -e "\n==> Building libraw.js + libraw.wasm (no-pthread fork)..."
 # Turbopack hang. The outer single Worker spawn in index.js is unaffected —
 # that one is a plain, non-recursive worker and is the shape @jsquash/* and
 # other Turbopack-safe packages already use.
-emcc \
+#
+# NOTHREAD FORK: switched emcc -> em++. libraw_wrapper.cpp is C++ linked
+# against C++ static libs (libraw.a, liblcms2.a), which needs the C++
+# runtime (operator new/delete, typeinfo) at link time. With -pthread
+# present, upstream's build apparently pulled that runtime in as a side
+# effect; without it, plain `emcc` (the C driver) fails with "undefined
+# symbol: operator new" etc. `em++` is the semantically correct driver
+# for this link regardless — see wasm-ld's own suggestion in the error.
+em++ \
   --bind \
   -I./includes \
   -s USE_LIBPNG=1 \
