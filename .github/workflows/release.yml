@@ -1,9 +1,16 @@
 name: Release
 
-# On a v* tag: build the wasm from source, run the tests, publish to npm with
-# provenance via OIDC trusted publishing (no NPM_TOKEN secret required — the
-# package's Trusted Publisher is configured on npmjs.com), and cut a GitHub
-# Release with the built artifacts attached.
+# On a v* tag: build the wasm from source, run the tests, STAGE it to npm via
+# OIDC trusted publishing (no NPM_TOKEN secret required — the package's
+# Trusted Publisher is configured on npmjs.com with direct `npm publish`
+# deliberately left disallowed, per npm's own recommendation), and cut a
+# GitHub Release with the built artifacts attached.
+#
+# Staging never prompts for 2FA (safe for CI), but the package is NOT public
+# yet. A human must run `npm stage approve <id>` locally afterward — 2FA is
+# required for that step, which is the whole point (proof of presence: a
+# compromised CI job can stage a malicious version, but it can never
+# publish one on its own). This job prints the exact command to run.
 #
 # Cut a release with:  npm version <patch|minor|major> && git push --follow-tags
 
@@ -59,17 +66,20 @@ jobs:
       - name: Upgrade npm (trusted publishing needs npm >= 11.5)
         run: npm install -g npm@latest
 
-      - name: Publish to npm (provenance via OIDC trusted publishing)
+      - name: Stage to npm (provenance via OIDC trusted publishing; needs human approval)
         run: |
           echo "npm $(npm --version) / node $(node --version)"
           VERSION=$(node -p "require('./package.json').version")
           # Idempotent: a tag push and a manual re-run can both fire for the same
-          # version; skip (don't fail) if it's already on npm so the release still
-          # completes and the GitHub Release step below still runs.
+          # version; skip (don't fail) if it's already live on npm so the release
+          # still completes and the GitHub Release step below still runs. This
+          # only catches an already-APPROVED version — a stale, never-approved
+          # stage from a previous run is harmless and npm will just report it.
           if npm view "libraw-wasm-nothread@${VERSION}" version >/dev/null 2>&1; then
-            echo "libraw-wasm-nothread@${VERSION} is already published — skipping npm publish."
+            echo "libraw-wasm-nothread@${VERSION} is already published — skipping npm stage."
           else
-            npm publish --provenance --access public
+            npm stage publish --provenance --access public
+            echo "::notice::Staged, not published. A maintainer must now run: npm stage approve <id> (see 'npm stage list' for <id>) — this requires 2FA and cannot be done from CI."
           fi
 
       - name: Create GitHub Release

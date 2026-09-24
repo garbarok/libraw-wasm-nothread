@@ -160,4 +160,5 @@ raw.dispose();
 ## CI/CD
  - **PRs** (`ci.yml`): the wasm is built from source and the full test suite runs on every pull request — so you do **not** need to build or commit any binaries (`dist/`, `libraw.wasm`, …). CI regenerates them.
  - **main** (`build-artifacts.yml`): when a build-affecting file changes on `main`, CI rebuilds the wasm and commits the regenerated artifacts back, keeping the checked-in binaries authoritative.
- - **Releases** (`release.yml`): pushing a `v*` tag builds from source, tests, and publishes to npm (with provenance, via OIDC trusted publishing) plus a GitHub Release. Cut one with `npm version <patch|minor|major> && git push --follow-tags`.
+ - **Releases** (`release.yml`): pushing a `v*` tag builds from source, tests, and **stages** the release to npm (with provenance, via OIDC trusted publishing) plus a GitHub Release. Cut one with `npm version <patch|minor|major> && git push --follow-tags`.
+   - Staging never prompts for 2FA, so it's safe for CI — but the package isn't public yet. After the workflow finishes, run `npm stage list` to find the staged version's id, then `npm stage approve <id>` **locally** (this does require 2FA) to actually make it public. This is npm's recommended trusted-publishing setup: a compromised CI run can stage a bad version, but never publish one unattended.
